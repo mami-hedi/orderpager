@@ -22,8 +22,10 @@ export const config = {
     host: process.env.DB_HOST || '127.0.0.1',
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD ?? '',
+        password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'orderpager',
+    // TiDB Cloud exige TLS : DB_SSL=true
+    ...(process.env.DB_SSL === 'true' ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {}),
   },
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   adminPassword: process.env.ADMIN_PASSWORD || 'admin',
