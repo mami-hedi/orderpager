@@ -1,0 +1,92 @@
+# Production : MySQL + application (API + front) + Caddy (HTTPS automatique)
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Les variables viennent du fichier ".env" à la racine (voir .env.production.example).
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --performance-schema=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?définir MYSQL_ROOT_PASSWORD dans .env}"
+      MYSQL_DATABASE: orderpager
+      MYSQL_USER: orderpager
+      MYSQL_PASSWORD: "${DB_PASSWORD:?définir DB_PASSWORD dans .env}"
+      TZ: Africa/Tunis
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    logging: *logging
+    # Aucun "ports" : MySQL n'est jamais exposé sur Internet, seul le conteneur "app" y accède.
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: orderpager
+      DB_PASSWORD: "${DB_PASSWORD:?définir DB_PASSWORD dans .env}"
+      DB_NAME: orderpager
+      JWT_SECRET: "${JWT_SECRET:?définir JWT_SECRET dans .env}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?définir ADMIN_PASSWORD dans .env}"
+      CLIENT_ORIGIN: "https://${DOMAIN:?définir DOMAIN dans .env}"
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+      VAPID_SUBJECT: "${VAPID_SUBJECT:-mailto:contact@example.com}"
+      TZ_BUSINESS: Africa/Tunis
+      TZ: Africa/Tunis
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: "${DOMAIN:?définir DOMAIN dans .env}"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Ne jamais supprimer ce volume : il garde les certificats HTTPS (limites de Let's Encrypt)
+      - caddy_data:/data
+      - caddy_config:/config
+    logging: *logging
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
