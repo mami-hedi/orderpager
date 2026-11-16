@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './landing.css';
 
 // À renseigner avant la mise en ligne (laisser vide pour masquer le bouton).
 // WhatsApp : numéro international sans "+" ni espaces, ex. '21612345678'.
 const CONTACT = {
-  whatsapp: '',
+  whatsapp: '21658146177',
   email: '',
 };
 
@@ -44,6 +44,8 @@ const FAQ = [
 ];
 
 export default function Landing() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   useEffect(() => {
     const prev = document.title;
     document.title = 'MH Bip – Fini les bippers, le téléphone de vos clients sonne';
@@ -55,17 +57,38 @@ export default function Landing() {
     : null;
   const mail = CONTACT.email ? `mailto:${CONTACT.email}?subject=${encodeURIComponent('Essai MH Bip')}` : null;
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <div className="lp">
       <header>
         <div className="wrap">
-          <a className="logo" href="#haut"><span><Bell /></span>MH Bip</a>
-          <nav aria-label="Navigation principale">
-            <a href="#comment">Comment ça marche</a>
-            <a href="#avantages">Avantages</a>
-            <a href="#tarif">Tarif</a>
-            <a href="#questions">Questions</a>
-            <a className="cta" href="#contact">Essai gratuit</a>
+          <a className="logo" href="#haut" onClick={closeMenu}>
+            <span><Bell /></span>MH Bip
+          </a>
+
+          <button
+            type="button"
+            className="burger"
+            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {menuOpen ? (
+                <path d="M18 6 6 18M6 6l12 12" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
+
+          <nav aria-label="Navigation principale" className={menuOpen ? 'open' : ''}>
+            <a href="#comment" onClick={closeMenu}>Comment ça marche</a>
+            <a href="#avantages" onClick={closeMenu}>Avantages</a>
+            <a href="#tarif" onClick={closeMenu}>Tarif</a>
+            <a href="#questions" onClick={closeMenu}>Questions</a>
+            <a className="cta" href="#contact" onClick={closeMenu}>Essai gratuit</a>
           </nav>
         </div>
       </header>
