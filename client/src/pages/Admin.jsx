@@ -33,10 +33,22 @@ function Login({ onLogin }) {
   );
 }
 
+const ICON_PROPS = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+const ICONS = {
+  dashboard: (
+    <svg {...ICON_PROPS}><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></svg>
+  ),
+  shops: (
+    <svg {...ICON_PROPS}><path d="M3 9l1.5-5h15L21 9" /><path d="M4 9v11h16V9" /><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" /><path d="M10 20v-6h4v6" /></svg>
+  ),
+  payments: (
+    <svg {...ICON_PROPS}><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19" /><path d="M6.5 15h4" /></svg>
+  ),
+};
 const TABS = [
-  ['dashboard', 'Tableau de bord'],
-  ['shops', 'Restaurants'],
-  ['payments', 'Paiements'],
+  ['dashboard', 'Tableau de bord', 'Accueil'],
+  ['shops', 'Restaurants', 'Restaurants'],
+  ['payments', 'Paiements', 'Paiements'],
 ];
 
 function Panel({ token, onLogout }) {
@@ -54,8 +66,8 @@ function Panel({ token, onLogout }) {
   };
 
   return (
-    <div className="page admin">
-      <header className="row between wrap">
+    <div className="page admin has-bottom-nav">
+      <header className="row between admin-head">
         <h1>Administration</h1>
         <button className="btn small secondary" onClick={onLogout}>Déconnexion</button>
       </header>
@@ -76,6 +88,15 @@ function Panel({ token, onLogout }) {
           <Shops call={call} onOpen={setShopId} />
         ))}
       {tab === 'payments' && <Payments call={call} token={token} onOpenShop={openShop} />}
+
+      <nav className="bottom-nav" aria-label="Navigation principale">
+        {TABS.map(([key, label, short]) => (
+          <button key={key} className={`bn-item ${tab === key ? 'on' : ''}`} onClick={() => goTab(key)} aria-current={tab === key ? 'page' : undefined} aria-label={label}>
+            {ICONS[key]}
+            <span>{short}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

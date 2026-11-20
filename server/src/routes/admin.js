@@ -136,9 +136,22 @@ router.get(
               COALESCE(SUM(active = 1), 0) AS active_count,
               COALESCE(SUM(active = 1 AND expires_at IS NULL), 0) AS unlimited,
               COALESCE(SUM(active = 1 AND expires_at IS NOT NULL AND expires_at < ?), 0) AS expired,
-              COALESCE(SUM(active = 1 AND expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?), 0) AS expiring
+              COALESCE(SUM(active = 1 AND expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?), 0) AS expiring,
+              COALESCE(SUM(active = 1 AND expires_at IS NOT NULL AND expires_at >= ?
+                           AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.shop_id = shops.id)), 0) AS trials
          FROM shops`,
-      [t, t, addDays(t, 7)],
+      [t, t, addDays(t, 7), t],
+    );
+
+    // Abonnements payants en cours : actifs, non expirés, avec au moins un paiement enregistré
+    const [[paying]] = await pool.query(
+      `SELECT COUNT(*) AS n,
+              COALESCE(SUM(monthly_price), 0) AS mrr,
+              COALESCE(SUM(monthly_price IS NULL), 0) AS no_price
+         FROM shops
+        WHERE active = 1 AND (expires_at IS NULL OR expires_at >= ?)
+          AND EXISTS (SELECT 1 FROM payments p WHERE p.shop_id = shops.id)`,
+      [t],
     );
 
     const [[month]] = await pool.query(
@@ -167,7 +180,8 @@ router.get(
 
     // Restaurants actifs expirés ou qui expirent dans les 7 jours
     const [renew] = await pool.query(
-      `SELECT id, name, slug, owner_name, phone, expires_at, monthly_price
+      `SELECT id, name, slug, owner_name, phone, expires_at, monthly_price,
+              EXISTS (SELECT 1 FROM payments p WHERE p.shop_id = shops.id) AS paid
          FROM shops
         WHERE active = 1 AND expires_at IS NOT NULL AND expires_at <= ?
         ORDER BY expires_at ASC`,
@@ -187,6 +201,12 @@ router.get(
         unlimited: Number(c.unlimited),
         expired: Number(c.expired),
         expiring: Number(c.expiring),
+        trials: Number(c.trials),
+      },
+      paying: {
+        count: Number(paying.n),
+        monthly: Number(paying.mrr),
+        withoutPrice: Number(paying.no_price),
       },
       revenue: {
         month: Number(month.total),
@@ -204,6 +224,7 @@ router.get(
         expiresAt: s.expires_at,
         daysLeft: daysLeft(s.expires_at),
         monthlyPrice: toNumber(s.monthly_price),
+        paid: Boolean(s.paid),
       })),
       ordersToday: Number(orders.n),
     });

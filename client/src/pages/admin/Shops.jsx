@@ -4,6 +4,7 @@ import { fmtDT, fmtDate, statusOf, expiryText, errorText, slugify } from './form
 const FILTERS = [
   ['all', 'Tous'],
   ['ok', 'Actifs'],
+  ['trial', 'En essai'],
   ['expiring', 'Expirent bientôt'],
   ['expired', 'Expirés'],
   ['suspended', 'Suspendus'],
@@ -21,6 +22,7 @@ const EMPTY_FORM = {
 function matchesFilter(shop, filter) {
   const key = statusOf(shop).key;
   if (filter === 'all') return true;
+  if (filter === 'trial') return shop.active && shop.expiresAt !== null && shop.daysLeft >= 0 && !shop.lastPaymentAt;
   if (filter === 'ok') return key === 'ok' || key === 'unlimited' || key === 'expiring';
   return key === filter;
 }
@@ -105,7 +107,11 @@ export default function Shops({ call, onOpen }) {
       </div>
 
       {showForm && (
-        <form onSubmit={create} className="card form-grid">
+        <form onSubmit={create} className="card form-grid sheet">
+          <div className="sheet-head full">
+            <strong>Nouveau restaurant</strong>
+            <button type="button" className="btn small secondary" onClick={() => setShowForm(false)}>Fermer</button>
+          </div>
           <label>
             Nom du restaurant *
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -145,7 +151,7 @@ export default function Shops({ call, onOpen }) {
         <input
           className="input search"
           type="search"
-          placeholder="Rechercher (nom, identifiant, gérant, téléphone)"
+          placeholder="Rechercher un restaurant"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -155,7 +161,7 @@ export default function Shops({ call, onOpen }) {
           <option value="created">Tri : plus récents</option>
         </select>
       </div>
-      <div className="chips">
+      <div className="chips scroll-x">
         {FILTERS.map(([key, label]) => (
           <button key={key} className={`chip ${filter === key ? 'on' : ''}`} onClick={() => setFilter(key)}>
             {label} ({counts[key]})
@@ -167,7 +173,7 @@ export default function Shops({ call, onOpen }) {
         <p className="muted">Chargement…</p>
       ) : visible.length ? (
         <div className="table-wrap">
-          <table className="table clickable">
+          <table className="table clickable cards">
             <thead>
               <tr>
                 <th>Restaurant</th>
@@ -183,18 +189,18 @@ export default function Shops({ call, onOpen }) {
                 const st = statusOf(s);
                 return (
                   <tr key={s.id} onClick={() => onOpen(s.id)}>
-                    <td>
+                    <td className="cell-main">
                       <strong>{s.name}</strong>
                       <div className="muted small-text">
                         /s/{s.slug}
                         {s.ownerName ? ` · ${s.ownerName}` : ''}
                       </div>
                     </td>
-                    <td><span className={`badge ${st.cls}`}>{st.label}</span></td>
-                    <td>{expiryText(s)}</td>
-                    <td>{fmtDate(s.lastPaymentAt)}</td>
-                    <td>{s.totalPaid ? fmtDT(s.totalPaid) : '—'}</td>
-                    <td>{s.ordersToday}</td>
+                    <td data-label="Statut"><span className={`badge ${st.cls}`}>{st.label}</span></td>
+                    <td data-label="Échéance">{expiryText(s)}</td>
+                    <td data-label="Dernier paiement">{fmtDate(s.lastPaymentAt)}</td>
+                    <td data-label="Total encaissé">{s.totalPaid ? fmtDT(s.totalPaid) : '—'}</td>
+                    <td data-label="Commandes aujourd'hui">{s.ordersToday}</td>
                   </tr>
                 );
               })}

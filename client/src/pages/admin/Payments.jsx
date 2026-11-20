@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiBlob } from '../../api.js';
 import { METHOD_LABELS, fmtDT, fmtDate, todayISO, errorText } from './format.js';
+import { useIsMobile } from './useIsMobile.js';
 
 export default function Payments({ call, token, onOpenShop }) {
   const [shops, setShops] = useState([]);
   const [filters, setFilters] = useState({ shopId: '', method: '', from: '', to: '' });
   const [data, setData] = useState({ payments: [], total: 0, count: 0 });
   const [error, setError] = useState('');
+  const isMobile = useIsMobile();
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilters = Object.values(filters).filter(Boolean).length;
 
   useEffect(() => {
     call('/admin/shops').then((d) => setShops(d.shops)).catch(() => {});
@@ -46,10 +50,17 @@ export default function Payments({ call, token, onOpenShop }) {
     <>
       <div className="row between wrap">
         <h2 className="flush">Paiements</h2>
-        <button className="btn small" onClick={exportCsv}>Exporter en CSV (Excel)</button>
+        <div className="row">
+          {isMobile && (
+            <button className="btn small secondary" onClick={() => setShowFilters((v) => !v)}>
+              Filtres{activeFilters ? ` (${activeFilters})` : ''}
+            </button>
+          )}
+          <button className="btn small" onClick={exportCsv}>Exporter en CSV (Excel)</button>
+        </div>
       </div>
 
-      <div className="card form-grid four">
+      <div className="card form-grid four" hidden={isMobile && !showFilters}>
         <label>
           Restaurant
           <select className="input" value={filters.shopId} onChange={set('shopId')}>
@@ -107,7 +118,7 @@ export default function Payments({ call, token, onOpenShop }) {
 
       {data.payments.length ? (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table cards">
             <thead>
               <tr>
                 <th>Date</th>
@@ -121,12 +132,12 @@ export default function Payments({ call, token, onOpenShop }) {
             <tbody>
               {data.payments.map((p) => (
                 <tr key={p.id}>
-                  <td>{fmtDate(p.paidAt)}</td>
-                  <td><button className="link" onClick={() => onOpenShop(p.shopId)}>{p.shopName}</button></td>
-                  <td>{fmtDT(p.amount)}</td>
-                  <td>{METHOD_LABELS[p.method]}</td>
-                  <td>{p.periodEnd ? `${fmtDate(p.periodStart)} → ${fmtDate(p.periodEnd)}` : '—'}</td>
-                  <td>{p.note || ''}</td>
+                  <td data-label="Date">{fmtDate(p.paidAt)}</td>
+                  <td className="cell-main"><button className="link" onClick={() => onOpenShop(p.shopId)}>{p.shopName}</button></td>
+                  <td data-label="Montant">{fmtDT(p.amount)}</td>
+                  <td data-label="Méthode">{METHOD_LABELS[p.method]}</td>
+                  <td data-label="Période">{p.periodEnd ? `${fmtDate(p.periodStart)} → ${fmtDate(p.periodEnd)}` : '—'}</td>
+                  <td data-label="Note">{p.note || ''}</td>
                 </tr>
               ))}
             </tbody>

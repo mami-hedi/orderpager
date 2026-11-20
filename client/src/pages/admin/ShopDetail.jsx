@@ -56,7 +56,7 @@ export default function ShopDetail({ call, id, onBack }) {
     );
   }
 
-  const st = statusOf(shop);
+  const st = statusOf({ ...shop, paid: payments.length > 0 });
   const origin = window.location.origin;
   // Adresse qui serait générée d'après le nom saisi (différente de l'adresse actuelle ?)
   const wantedSlug = slugify(info.name);
@@ -260,11 +260,10 @@ export default function ShopDetail({ call, id, onBack }) {
         <h3>Historique ({payments.length}) · total {fmtDT(totalPaid)}</h3>
         {payments.length ? (
           <div className="table-wrap">
-            <table className="table">
+            <table className="table cards">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Montant</th>
+                  <th>Date et montant</th>
                   <th>Méthode</th>
                   <th>Période couverte</th>
                   <th>Note</th>
@@ -274,12 +273,11 @@ export default function ShopDetail({ call, id, onBack }) {
               <tbody>
                 {payments.map((p) => (
                   <tr key={p.id}>
-                    <td>{fmtDate(p.paidAt)}</td>
-                    <td>{fmtDT(p.amount)}</td>
-                    <td>{METHOD_LABELS[p.method]}</td>
-                    <td>{p.periodEnd ? `${fmtDate(p.periodStart)} → ${fmtDate(p.periodEnd)} (${p.months} mois)` : '—'}</td>
-                    <td>{p.note || ''}</td>
-                    <td><button className="link danger" onClick={() => removePayment(p)}>Supprimer</button></td>
+                    <td className="cell-main">{fmtDate(p.paidAt)} · <strong>{fmtDT(p.amount)}</strong></td>
+                    <td data-label="Méthode">{METHOD_LABELS[p.method]}</td>
+                    <td data-label="Période">{p.periodEnd ? `${fmtDate(p.periodStart)} → ${fmtDate(p.periodEnd)} (${p.months} mois)` : '—'}</td>
+                    <td data-label="Note">{p.note || ''}</td>
+                    <td className="cell-action"><button className="link danger" onClick={() => removePayment(p)}>Supprimer</button></td>
                   </tr>
                 ))}
               </tbody>

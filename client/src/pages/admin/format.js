@@ -19,13 +19,20 @@ export const monthLabel = (ym) => {
   return `${m}/${y}`;
 };
 
-// Statut global d'un restaurant, à partir de `active`, `expiresAt` et `daysLeft`
+// Statut global d'un restaurant, à partir de `active`, `expiresAt`, `daysLeft` et du fait d'avoir déjà payé
+// (`paid`, sinon `lastPaymentAt`). Un restaurant actif qui n'a jamais payé est « en essai ».
 export function statusOf(shop) {
+  const paid = shop.paid ?? Boolean(shop.lastPaymentAt);
   if (!shop.active) return { key: 'suspended', label: 'Suspendu', cls: 'off' };
-  if (shop.expiresAt === null) return { key: 'unlimited', label: 'Sans limite', cls: 'ok' };
-  if (shop.daysLeft < 0) return { key: 'expired', label: 'Expiré', cls: 'off' };
-  if (shop.daysLeft <= 7) return { key: 'expiring', label: `Expire J-${shop.daysLeft}`, cls: 'warn' };
-  return { key: 'ok', label: 'Actif', cls: 'ok' };
+  if (shop.expiresAt === null) return { key: 'unlimited', label: 'Sans limite', cls: 'neutral' };
+  const d = shop.daysLeft;
+  if (d < 0) return { key: 'expired', label: paid ? 'Expiré' : 'Essai terminé', cls: 'off' };
+  if (d <= 7) {
+    const when = d === 0 ? 'dernier jour' : `J-${d}`;
+    return { key: 'expiring', label: `${paid ? 'À renouveler' : "Fin d'essai"} · ${when}`, cls: 'warn' };
+  }
+  if (!paid) return { key: 'trial', label: `Essai · J-${d}`, cls: 'trial' };
+  return { key: 'ok', label: 'Payé', cls: 'ok' };
 }
 
 export function expiryText(shop) {
