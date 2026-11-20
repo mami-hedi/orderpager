@@ -203,3 +203,10 @@ section.card { margin-bottom: 0.8rem; gap: 0.7rem; }
   .no-print { display: none !important; }
   body { background: #fff; }
 }
+
+/* Jours restants de l'abonnement (écran comptoir) */
+.sub-pill { display: inline-block; margin-top: 0.2rem; padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.9rem; font-weight: 700; }
+.sub-pill small { font-weight: 500; font-size: 0.8rem; }
+.sub-pill.ok { background: #dcfce7; color: #166534; }
+.sub-pill.warn { background: #fef3c7; color: #92400e; }
+.sub-pill.danger { background: #fee2e2; color: #991b1b; }

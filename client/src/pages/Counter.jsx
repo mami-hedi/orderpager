@@ -57,18 +57,35 @@ function readyHint(r) {
   return '';
 }
 
+// "2026-12-25" -> "25/12/2026"
+function formatDate(iso) {
+  const [y, m, d] = String(iso).slice(0, 10).split('-');
+  return y && m && d ? `${d}/${m}/${y}` : iso;
+}
+
 function Board({ token, shopName, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [num, setNum] = useState('');
   const [msg, setMsg] = useState(null); // { text, undoId? }
-  const [daysLeft, setDaysLeft] = useState(null);
+  const [sub, setSub] = useState({ daysLeft: null, expiresAt: null });
+  const { daysLeft, expiresAt } = sub;
   const inputRef = useRef(null);
 
-  // Bandeau d'alerte quand l'abonnement approche de sa fin
+  // Jours restants de l'abonnement : chargés à l'ouverture, puis rafraîchis chaque heure
+  // et au retour sur l'onglet (l'écran comptoir reste ouvert plusieurs jours).
   useEffect(() => {
-    api('/shop/me', { token })
-      .then((me) => setDaysLeft(me.daysLeft))
-      .catch(() => {});
+    const refresh = () =>
+      api('/shop/me', { token })
+        .then((me) => setSub({ daysLeft: me.daysLeft, expiresAt: me.expiresAt }))
+        .catch(() => {});
+    refresh();
+    const timer = setInterval(refresh, 60 * 60 * 1000);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [token]);
 
   const load = useCallback(async () => {
@@ -129,7 +146,17 @@ function Board({ token, shopName, onLogout }) {
   return (
     <div className="page wide">
       <header className="row between">
-        <h1>{shopName || 'Comptoir'}</h1>
+        <div>
+          <h1>{shopName || 'Comptoir'}</h1>
+          {daysLeft !== null && (
+            <span className={`sub-pill ${daysLeft <= 0 ? 'danger' : daysLeft <= 7 ? 'warn' : 'ok'}`}>
+              {daysLeft <= 0
+                ? 'Abonnement : dernier jour'
+                : `Abonnement : ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`}
+              {expiresAt && <small> · jusqu'au {formatDate(expiresAt)}</small>}
+            </span>
+          )}
+        </div>
         <button className="btn small secondary" onClick={onLogout}>Déconnexion</button>
       </header>
 
