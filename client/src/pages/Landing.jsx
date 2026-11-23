@@ -100,7 +100,7 @@ export default function Landing() {
             <h1>Fini les bippers. Le téléphone de vos clients sonne quand la commande est prête.</h1>
             <p>MH Bip remplace les bippers par un simple QR code. Votre client scanne, saisit son numéro de ticket, et son téléphone sonne dès que vous appuyez sur « Prête ». Rien à acheter, rien à installer.</p>
             <div className="row">
-              <a className="btn-lp" href="#contact">Essayer gratuitement</a><a
+              <a
   className="btn-lp"
   href={`https://wa.me/21658146177?text=${encodeURIComponent(
     "Bonjour, je voudrais essayer MH Bip pour mon restaurant."
