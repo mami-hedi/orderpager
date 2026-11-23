@@ -100,8 +100,17 @@ export default function Landing() {
             <h1>Fini les bippers. Le téléphone de vos clients sonne quand la commande est prête.</h1>
             <p>MH Bip remplace les bippers par un simple QR code. Votre client scanne, saisit son numéro de ticket, et son téléphone sonne dès que vous appuyez sur « Prête ». Rien à acheter, rien à installer.</p>
             <div className="row">
-              <a className="btn-lp" href="#contact">Essayer gratuitement</a>
-              <a className="btn-lp line" href="#comment">Voir comment ça marche</a>
+              <a className="btn-lp" href="#contact">Essayer gratuitement</a><a
+  className="btn-lp"
+  href={`https://wa.me/21658146177?text=${encodeURIComponent(
+    "Bonjour, je voudrais essayer MH Bip pour mon restaurant."
+  )}`}
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Essayer gratuitement
+</a>
+<a className="btn-lp line" href="#comment">Voir comment ça marche</a>
             </div>
             <ul className="checks">
               <li><Check />Aucune application à télécharger</li>
@@ -202,7 +211,16 @@ export default function Landing() {
                 <li><Check size={20} />Page client à l’adresse de votre restaurant</li>
                 <li><Check size={20} />Assistance directe</li>
               </ul>
-              <a className="btn-lp" href="#contact">Démarrer mon essai gratuit</a>
+              <a
+  className="btn-lp"
+  href={`https://wa.me/21658146177?text=${encodeURIComponent(
+    "Bonjour, je voudrais essayer MH Bip pour mon restaurant."
+  )}`}
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Démarrer mon essai gratuit
+</a>
             </div>
             <p style={{ maxWidth: 520, color: 'var(--soft)', fontSize: 15 }}>Le paiement se fait directement avec nous, sans carte bancaire en ligne.</p>
           </div>
@@ -236,11 +254,21 @@ export default function Landing() {
       </main>
 
       <footer>
-        <div className="wrap">
-          <div><strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de MH Digital Solution</div>
-          <div>Hammamet, Tunisie</div>
-        </div>
-      </footer>
+  <div className="wrap">
+    <div>
+      <strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de{' '}
+      <a
+        href="https://www.mh-digital-solution.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: 'inherit', textDecoration: 'underline' }}
+      >
+        MH Digital Solution
+      </a>
+    </div>
+    <div>Tunisie</div>
+  </div>
+</footer>
     </div>
   );
 }
