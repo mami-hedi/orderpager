@@ -6,13 +6,27 @@ let timer = null;
 
 export function unlockAudio() {
   try {
+    // iPhone (Safari 16.4+) : sans cela, le mode silencieux coupe totalement le son de la page
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch {
+    // non supporté
+  }
+  try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     ctx = ctx || new AudioCtx();
-    if (ctx.state === 'suspended') ctx.resume();
+    // Sur iOS l'état peut aussi être « interrupted » (écran verrouillé, appel, etc.)
+    if (ctx.state !== 'running') ctx.resume();
   } catch {
     // audio indisponible
   }
+}
+
+// Au retour sur la page (écran déverrouillé, retour depuis une notification), on réveille le son
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+  });
 }
 
 function beep(freq, start, duration) {
@@ -30,7 +44,7 @@ function beep(freq, start, duration) {
 
 function ring() {
   if (ctx) {
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
     const t = ctx.currentTime;
     beep(880, t, 0.18);
     beep(1175, t + 0.25, 0.18);

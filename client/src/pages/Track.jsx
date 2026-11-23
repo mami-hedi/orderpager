@@ -5,6 +5,7 @@ import { api, socketUrl, storage } from '../api.js';
 import { useI18n } from '../i18n.jsx';
 import { startAlarm, stopAlarm, unlockAudio } from '../alarm.js';
 import { requestPermission, subscribeForOrder } from '../push.js';
+import { isIOS, isStandalone } from '../device.js';
 
 function Shell({ title, children, status }) {
   const { lang, setLang } = useI18n();
@@ -188,14 +189,14 @@ export default function Track() {
 
   if (notFound) {
     return (
-      <Shell title="OrderPager">
+      <Shell title="MH Bip">
         <p className="error">{t('shopNotFound')}</p>
       </Shell>
     );
   }
   if (!shop) {
     return (
-      <Shell title="OrderPager">
+      <Shell title="MH Bip">
         <p className="muted">{t('loading')}</p>
       </Shell>
     );
@@ -237,6 +238,7 @@ export default function Track() {
         <div className="spinner" aria-hidden="true" />
         <h2>{t('preparing')}</h2>
         <p className="muted narrow">{t('keepOpen')}</p>
+        {isIOS() && !isStandalone() && <p className="notice narrow">{t('iosHint')}</p>}
         <button className="link" onClick={changeNumber}>{t('wrongNumber')}</button>
       </Shell>
     );

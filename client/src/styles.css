@@ -283,3 +283,8 @@ a.btn.small { text-decoration: none; display: inline-flex; align-items: center; 
 }
 
 [hidden] { display: none !important; }
+
+/* Avis iPhone et clignotement de l'écran « prête » (la vibration n'existe pas sur iPhone) */
+.notice { background: #fef3c7; color: #92400e; border-radius: 14px; padding: 0.8rem 1rem; font-size: 0.95rem; line-height: 1.4; }
+@keyframes ready-flash { from { background: var(--go); } to { background: #22c55e; } }
+@media (prefers-reduced-motion: no-preference) { .screen.ready { animation: ready-flash 0.7s ease-in-out infinite alternate; } }
