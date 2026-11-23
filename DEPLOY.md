@@ -170,7 +170,7 @@ Le message « VAPID non configuré » ne doit plus apparaître.
 3. Sur votre téléphone, **en 4G** (pas en Wi-Fi), scannez le poster (`/poster/<adresse>`) et saisissez un numéro.
 4. Sur un ordinateur, ouvrez `/counter`, connectez-vous avec le nom du restaurant et appuyez sur « Prête ».
 
-Android : acceptez la demande de notification. iPhone : il faut d'abord ajouter le site à l'écran d'accueil (iOS 16.4 ou plus récent) pour recevoir les notifications ; sinon le client garde la page ouverte.
+Android : acceptez la demande de notification. iPhone : un encart « Comment faire ? » guide le client pour ajouter le site à l'écran d'accueil (iOS 16.4 ou plus récent), rouvrir l'icône, ressaisir son numéro (prérempli) et accepter les notifications ; sinon le client garde la page ouverte. Vérifiez aussi que `VAPID_SUBJECT` est une vraie adresse `mailto:` (Apple peut refuser l'exemple).
 
 ## 10. Sauvegardes
 

@@ -288,3 +288,25 @@ a.btn.small { text-decoration: none; display: inline-flex; align-items: center; 
 .notice { background: #fef3c7; color: #92400e; border-radius: 14px; padding: 0.8rem 1rem; font-size: 0.95rem; line-height: 1.4; }
 @keyframes ready-flash { from { background: var(--go); } to { background: #22c55e; } }
 @media (prefers-reduced-motion: no-preference) { .screen.ready { animation: ready-flash 0.7s ease-in-out infinite alternate; } }
+
+/* Guide d'installation iPhone */
+.install-card {
+  background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 12px;
+  padding: 0.9rem 1rem; text-align: start; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start;
+}
+.install-card p { margin: 0; font-size: 0.92rem; color: var(--text); }
+.notif-status { font-size: 0.9rem; margin: 0; }
+.notif-status.ok { color: var(--go); }
+.notif-status.bad { color: var(--danger); }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 50;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.modal-sheet {
+  background: #fff; width: 100%; max-width: 28rem; max-height: 90vh; overflow-y: auto;
+  border-radius: 18px 18px 0 0; padding: 1.2rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 0.8rem; text-align: start;
+}
+.modal-sheet h2 { margin: 0; }
+.small-text { font-size: 0.88rem; margin: 0; }
+.guide-steps { margin: 0; padding-inline-start: 1.3rem; display: flex; flex-direction: column; gap: 0.7rem; line-height: 1.4; }

@@ -28,6 +28,32 @@ app.use('/api/auth', authRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/admin', adminRoutes);
+// Manifeste PWA par restaurant (icône « écran d'accueil »). Même logique que client/api/manifest.js (Vercel).
+const SLUG_RE = /^[a-z0-9-]{1,60}$/;
+const NUM_RE = /^[A-Za-z0-9-]{1,20}$/;
+app.get('/api/manifest', (req, res) => {
+  const { slug, n } = req.query;
+  const ok = typeof slug === 'string' && SLUG_RE.test(slug);
+  const start = ok ? `/s/${slug}${typeof n === 'string' && NUM_RE.test(n) ? `?n=${n}` : ''}` : '/';
+  res.type('application/manifest+json').set('Cache-Control', 'no-store').send(
+    JSON.stringify({
+      id: ok ? `/s/${slug}` : '/',
+      name: 'MH Bip',
+      short_name: 'MH Bip',
+      start_url: start,
+      scope: '/',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#0f766e',
+      icons: [
+        { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      ],
+    }),
+  );
+});
+
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 
 // En production, le serveur peut servir directement le front compilé

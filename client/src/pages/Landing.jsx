@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import './landing.css';
 
 // À renseigner avant la mise en ligne (laisser vide pour masquer le bouton).
 // WhatsApp : numéro international sans "+" ni espaces, ex. '21612345678'.
 const CONTACT = {
-  whatsapp: '21658146177',
+  whatsapp: '',
   email: '',
 };
 
@@ -36,7 +36,7 @@ const FEATURES = [
 
 const FAQ = [
   ['Mes clients doivent-ils installer une application ?', 'Non. Le QR code ouvre une page web directement dans le navigateur du téléphone. Aucun compte, aucun téléchargement.'],
-  ['Le téléphone sonne-t-il écran éteint ?', 'Sur Android, oui : le client reçoit une notification, même écran verrouillé, s’il l’accepte. Sur iPhone, la notification écran éteint demande d’ajouter la page à l’écran d’accueil ; sinon la sonnerie fonctionne tant que la page reste ouverte, et l’écran est maintenu allumé pendant l’attente. Dans tous les cas, vous pouvez toujours appeler le numéro à voix haute.'],
+  ['Le téléphone sonne-t-il écran éteint ?', 'Sur Android, oui : le client reçoit une notification, même écran verrouillé, s’il l’accepte. Sur iPhone, l’application affiche un guide en 5 étapes : le client ajoute MH Bip à son écran d’accueil (iOS 16.4 ou plus récent), puis accepte les notifications. Sans cela, la sonnerie fonctionne tant que la page reste ouverte. Dans tous les cas, vous pouvez toujours appeler le numéro à voix haute.'],
   ['Et si le client n’a pas d’Internet ?', 'Il lui faut une connexion, ses données mobiles ou le Wi-Fi de votre établissement. Sur votre écran comptoir, vous voyez quels clients suivent leur commande : les autres, vous les appelez à voix haute comme aujourd’hui.'],
   ['Que se passe-t-il si quelqu’un se trompe de numéro ?', 'Le client peut modifier son numéro depuis son écran d’attente. De votre côté, après avoir appuyé sur « Prête », un bouton Annuler remet la commande en préparation et arrête la sonnerie.'],
   ['Que faut-il pour démarrer ?', 'Un appareil avec navigateur au comptoir et une imprimante pour le poster. Nous créons votre compte à partir du nom de votre restaurant, vous recevez vos accès et votre poster QR : vous pouvez commencer le jour même.'],
@@ -44,8 +44,6 @@ const FAQ = [
 ];
 
 export default function Landing() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   useEffect(() => {
     const prev = document.title;
     document.title = 'MH Bip – Fini les bippers, le téléphone de vos clients sonne';
@@ -57,38 +55,17 @@ export default function Landing() {
     : null;
   const mail = CONTACT.email ? `mailto:${CONTACT.email}?subject=${encodeURIComponent('Essai MH Bip')}` : null;
 
-  const closeMenu = () => setMenuOpen(false);
-
   return (
     <div className="lp">
       <header>
         <div className="wrap">
-          <a className="logo" href="#haut" onClick={closeMenu}>
-            <span><Bell /></span>MH Bip
-          </a>
-
-          <button
-            type="button"
-            className="burger"
-            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {menuOpen ? (
-                <path d="M18 6 6 18M6 6l12 12" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              )}
-            </svg>
-          </button>
-
-          <nav aria-label="Navigation principale" className={menuOpen ? 'open' : ''}>
-            <a href="#comment" onClick={closeMenu}>Comment ça marche</a>
-            <a href="#avantages" onClick={closeMenu}>Avantages</a>
-            <a href="#tarif" onClick={closeMenu}>Tarif</a>
-            <a href="#questions" onClick={closeMenu}>Questions</a>
-            <a className="cta" href="#contact" onClick={closeMenu}>Essai gratuit</a>
+          <a className="logo" href="#haut"><span><Bell /></span>MH Bip</a>
+          <nav aria-label="Navigation principale">
+            <a href="#comment">Comment ça marche</a>
+            <a href="#avantages">Avantages</a>
+            <a href="#tarif">Tarif</a>
+            <a href="#questions">Questions</a>
+            <a className="cta" href="#contact">Essai gratuit</a>
           </nav>
         </div>
       </header>
@@ -100,17 +77,8 @@ export default function Landing() {
             <h1>Fini les bippers. Le téléphone de vos clients sonne quand la commande est prête.</h1>
             <p>MH Bip remplace les bippers par un simple QR code. Votre client scanne, saisit son numéro de ticket, et son téléphone sonne dès que vous appuyez sur « Prête ». Rien à acheter, rien à installer.</p>
             <div className="row">
-              <a
-  className="btn-lp"
-  href={`https://wa.me/21658146177?text=${encodeURIComponent(
-    "Bonjour, je voudrais essayer MH Bip pour mon restaurant."
-  )}`}
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Essayer gratuitement
-</a>
-<a className="btn-lp line" href="#comment">Voir comment ça marche</a>
+              <a className="btn-lp" href="#contact">Essayer gratuitement</a>
+              <a className="btn-lp line" href="#comment">Voir comment ça marche</a>
             </div>
             <ul className="checks">
               <li><Check />Aucune application à télécharger</li>
@@ -211,16 +179,7 @@ export default function Landing() {
                 <li><Check size={20} />Page client à l’adresse de votre restaurant</li>
                 <li><Check size={20} />Assistance directe</li>
               </ul>
-              <a
-  className="btn-lp"
-  href={`https://wa.me/21658146177?text=${encodeURIComponent(
-    "Bonjour, je voudrais essayer MH Bip pour mon restaurant."
-  )}`}
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Démarrer mon essai gratuit
-</a>
+              <a className="btn-lp" href="#contact">Démarrer mon essai gratuit</a>
             </div>
             <p style={{ maxWidth: 520, color: 'var(--soft)', fontSize: 15 }}>Le paiement se fait directement avec nous, sans carte bancaire en ligne.</p>
           </div>
@@ -254,21 +213,11 @@ export default function Landing() {
       </main>
 
       <footer>
-  <div className="wrap">
-    <div>
-      <strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de{' '}
-      <a
-        href="https://www.mh-digital-solution.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: 'inherit', textDecoration: 'underline' }}
-      >
-        MH Digital Solution
-      </a>
-    </div>
-    <div>Tunisie</div>
-  </div>
-</footer>
+        <div className="wrap">
+          <div><strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de MH Digital Solution</div>
+          <div>Hammamet, Tunisie</div>
+        </div>
+      </footer>
     </div>
   );
 }

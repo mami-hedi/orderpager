@@ -6,6 +6,26 @@ import { useI18n } from '../i18n.jsx';
 import { startAlarm, stopAlarm, unlockAudio } from '../alarm.js';
 import { requestPermission, subscribeForOrder } from '../push.js';
 import { isIOS, isStandalone } from '../device.js';
+import InstallGuide from '../components/InstallGuide.jsx';
+
+const NUMBER_RE = /^[A-Za-z0-9-]{1,20}$/;
+
+// Numéro mémorisé dans l'URL (?n=112) : l'app installée sur l'écran d'accueil iOS a un stockage séparé de Safari,
+// l'URL est donc le seul moyen de retrouver le numéro après l'installation.
+function numberFromUrl() {
+  const n = new URLSearchParams(window.location.search).get('n') || '';
+  return NUMBER_RE.test(n) ? n : '';
+}
+
+function setUrlNumber(slug, n) {
+  try {
+    window.history.replaceState(null, '', n ? `/s/${slug}?n=${encodeURIComponent(n)}` : `/s/${slug}`);
+  } catch {
+    // sans gravité
+  }
+}
+
+const notifPermission = () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
 
 function Shell({ title, children, status }) {
   const { lang, setLang } = useI18n();
@@ -29,7 +49,8 @@ export default function Track() {
 
   const [shop, setShop] = useState(null);
   const [notFound, setNotFound] = useState(false);
-  const [number, setNumber] = useState('');
+  const [number, setNumber] = useState(numberFromUrl);
+  const [perm, setPerm] = useState(notifPermission);
   const [order, setOrder] = useState(null); // { publicId, orderNumber, status, rev }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -63,6 +84,38 @@ export default function Track() {
       cancelled = true;
     };
   }, [slug, storageKey]);
+
+  // Manifeste propre à ce restaurant : l'icône ajoutée à l'écran d'accueil rouvre directement la bonne page
+  // (et le bon numéro) et porte le nom du restaurant.
+  const shopName = shop?.name;
+  const trackedNumber = order?.orderNumber;
+  useEffect(() => {
+    if (!shopName) return undefined;
+    const link = document.querySelector('link[rel="manifest"]');
+    const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    const prevHref = link?.getAttribute('href');
+    const prevTitle = meta?.getAttribute('content');
+    const q = new URLSearchParams({ slug });
+    if (trackedNumber) q.set('n', trackedNumber);
+    if (link) link.setAttribute('href', `/api/manifest?${q}`);
+    if (meta) meta.setAttribute('content', shopName.slice(0, 20));
+    return () => {
+      if (link && prevHref) link.setAttribute('href', prevHref);
+      if (meta && prevTitle) meta.setAttribute('content', prevTitle);
+    };
+  }, [shopName, slug, trackedNumber]);
+
+  // Garde l'URL à jour avec le numéro suivi
+  useEffect(() => {
+    if (!shopName) return;
+    if (trackedNumber) setUrlNumber(slug, trackedNumber);
+  }, [shopName, slug, trackedNumber]);
+
+  // Notifications déjà autorisées (ex. reprise d'une commande) : on (ré)enregistre l'abonnement
+  useEffect(() => {
+    const id = order?.publicId;
+    if (id && notifPermission() === 'granted') subscribeForOrder(id).catch(() => {});
+  }, [order?.publicId]);
 
   // Resynchronise le statut (reconnexion, retour au premier plan, filet de sécurité)
   const publicId = order?.publicId;
@@ -147,8 +200,12 @@ export default function Track() {
       storage.set(storageKey, { publicId: o.publicId });
       setDismissed(false);
       setOrder({ publicId: o.publicId, orderNumber: o.orderNumber, status: o.status, rev: 0 });
+      setUrlNumber(slug, o.orderNumber);
       permission
-        .then((p) => (p === 'granted' ? subscribeForOrder(o.publicId) : null))
+        .then((p) => {
+          setPerm(notifPermission());
+          return p === 'granted' ? subscribeForOrder(o.publicId) : null;
+        })
         .catch(() => {});
     } catch (err) {
       setError(err.message === 'invalid_number' ? t('invalidNumber') : t('genericError'));
@@ -167,8 +224,20 @@ export default function Track() {
     setOrder((cur) => (cur ? { ...cur, status: 'picked' } : cur));
   }
 
+  // Geste utilisateur : demande l'autorisation des notifications (app installée sur iPhone)
+  async function enableNotifications() {
+    try {
+      const p = await requestPermission();
+      setPerm(notifPermission());
+      if (p === 'granted' && order?.publicId) await subscribeForOrder(order.publicId);
+    } catch {
+      setPerm(notifPermission());
+    }
+  }
+
   function reset() {
     storage.del(storageKey);
+    setUrlNumber(slug, '');
     setOrder(null);
     setNumber('');
     setDismissed(false);
@@ -238,7 +307,12 @@ export default function Track() {
         <div className="spinner" aria-hidden="true" />
         <h2>{t('preparing')}</h2>
         <p className="muted narrow">{t('keepOpen')}</p>
-        {isIOS() && !isStandalone() && <p className="notice narrow">{t('iosHint')}</p>}
+        {isIOS() && !isStandalone() && <InstallGuide />}
+        {isIOS() && isStandalone() && perm === 'granted' && <p className="notif-status ok narrow">✓ {t('notifOn')}</p>}
+        {isIOS() && isStandalone() && perm === 'default' && (
+          <button type="button" className="btn small" onClick={enableNotifications}>{t('notifEnable')}</button>
+        )}
+        {isIOS() && isStandalone() && perm === 'denied' && <p className="notif-status bad narrow">{t('notifDenied')}</p>}
         <button className="link" onClick={changeNumber}>{t('wrongNumber')}</button>
       </Shell>
     );
@@ -247,6 +321,7 @@ export default function Track() {
   return (
     <Shell title={shop.name}>
       <h1>{t('enterNumber')}</h1>
+      {isIOS() && isStandalone() && perm === 'default' && <p className="muted narrow">{t('notifInstalledHint')}</p>}
       <form onSubmit={onSubmit} className="stack">
         <input
           className="input big"

@@ -69,7 +69,7 @@ Test rapide : ouvrez `/counter` (slug `demo`) sur un onglet et `/s/demo` sur un 
 - À la création d'un restaurant dans `/admin`, vous choisissez la durée d'essai (10 jours par défaut, `0` = sans limite).
 - La prolongation part de la date de fin actuelle, ou d'aujourd'hui si l'abonnement est déjà expiré.
 - La date de fin est le **dernier jour d'accès, inclus**. Après cette date : le comptoir ne peut plus se connecter, les requêtes comptoir sont refusées et la page client affiche « Restaurant introuvable ».
-- Le comptoir voit un bandeau jaune dans les 7 derniers jours.
+- L'écran comptoir affiche en permanence les **jours restants** de l'abonnement et sa date de fin (vert, orange dans les 7 derniers jours, rouge le dernier jour), plus un bandeau jaune dans les 7 derniers jours. Un restaurant sans date n'affiche rien.
 - Un restaurant sans date (`expires_at` vide), comme le restaurant `demo`, n'expire jamais.
 - Le paiement reste manuel (espèces, virement, D17…) : vous encaissez, puis vous l'enregistrez dans `/admin` (voir ci-dessous).
 
@@ -77,8 +77,8 @@ Test rapide : ouvrez `/counter` (slug `demo`) sur un onglet et `/s/demo` sur un 
 
 Trois onglets :
 
-- **Tableau de bord** : restaurants actifs, abonnements à renouveler (expirés ou dans moins de 7 jours, avec téléphone et bouton « Encaisser »), encaissé ce mois et au total, commandes du jour, revenus des 12 derniers mois.
-- **Restaurants** : liste avec recherche (nom, identifiant, gérant, téléphone), filtres (actifs, expirent bientôt, expirés, suspendus) et tri. Un clic ouvre la **fiche** :
+- **Tableau de bord** : un bloc **« À faire aujourd'hui »** en tête (abonnements en retard, dernier jour, cette semaine, avec distinction essai gratuit / abonnement, boutons « Encaisser » et « Appeler »), puis restaurants actifs et en essai, abonnements payants par mois, encaissé ce mois (avec le mois dernier) et au total, commandes du jour, revenus des 12 derniers mois.
+- **Restaurants** : liste avec recherche (nom, identifiant, gérant, téléphone), filtres (actifs, en essai, expirent bientôt, expirés, suspendus) et tri. Statuts : Essai, Payé, Fin d'essai / À renouveler (7 derniers jours), Expiré, Suspendu. Un clic ouvre la **fiche** :
   - *Abonnement* : échéance modifiable, prolongation offerte (+1 mois / +1 an), suspension.
   - *Accès* : liens comptoir, page client et poster QR (avec bouton Copier), changement du mot de passe du comptoir.
   - *Paiements* : formulaire (mois ajoutés, montant pré-rempli avec le prix mensuel × mois, méthode, date, note) et historique. Enregistrer un paiement avec des mois > 0 **prolonge automatiquement l'abonnement** ; avec 0 mois, le paiement est seulement noté.
@@ -89,10 +89,12 @@ Supprimer un paiement ne modifie pas l'échéance de l'abonnement : corrigez la 
 
 **Mise à jour d'une base existante** : relancez simplement `npm run db:init`. Il crée la table `payments` et ajoute les colonnes manquantes de `shops` sans toucher aux données.
 
+**Sur téléphone** : barre de navigation fixe en bas, restaurants et paiements affichés en cartes, formulaire de création en plein écran, filtres des paiements repliables.
+
 ## Notifications et sonnerie : ce qu'il faut savoir
 
 - **Sonnerie dans la page** (WebAudio + vibration) : fonctionne tant que la page reste ouverte. L'écran est maintenu allumé (Wake Lock) pendant l'attente.
-- **Web Push** (écran éteint) : fonctionne sur Android/Chrome. Sur **iPhone**, le push n'est disponible que si le site est ajouté à l'écran d'accueil (iOS 16.4+). Sinon, le client doit garder la page ouverte : le message à l'écran le lui indique.
+- **Web Push** (écran éteint) : fonctionne sur Android/Chrome. Sur **iPhone**, le push n'est disponible que si le site est ajouté à l'écran d'accueil (iOS 16.4+). L'application affiche alors un encart « Recevoir l'alerte même écran verrouillé » avec un guide en 5 étapes (Partager → Sur l'écran d'accueil → Ajouter → ouvrir l'icône → saisir le numéro → Autoriser). Le numéro est conservé dans l'URL (`/s/<slug>?n=112`) et dans un manifeste par restaurant (`/api/manifest`, fonction `client/api/manifest.js` sur Vercel, route Express en secours), car l'app installée a un stockage séparé de Safari. Sans installation, le client garde la page ouverte.
 - Le push et le Wake Lock exigent **HTTPS** (sauf `localhost`). Pour tester sur un vrai téléphone, déployez ou utilisez un tunnel (ngrok, Cloudflare Tunnel).
 - L'API de vibration n'existe pas sur iOS.
 - Sans clés VAPID, tout fonctionne sauf le push.
@@ -100,6 +102,8 @@ Supprimer un paiement ne modifie pas l'échéance de l'abonnement : corrigez la 
 ## Déploiement
 
 **Recommandé : VPS + Docker (MySQL, application et HTTPS automatique) : voir [DEPLOY.md](DEPLOY.md)** pour le guide pas à pas, les sauvegardes et la checklist avant impression des posters.
+
+**Gratuit : TiDB Cloud + Render + Vercel : voir [DEPLOY-GRATUIT.md](DEPLOY-GRATUIT.md)** (avec les limites de l'offre gratuite de Render).
 
 **Alternative : un seul service (Render)**
 
