@@ -12,7 +12,8 @@ if (pushEnabled) {
 }
 
 export async function sendReadyPush(order, shop) {
-  if (!pushEnabled || !order.push_subscription) return;
+  if (!pushEnabled) return console.log('[push] ignoré : VAPID non configuré');
+  if (!order.push_subscription) return console.log(`[push] ignoré : pas d'abonnement pour la commande ${order.order_number}`);
   const sub =
     typeof order.push_subscription === 'string'
       ? JSON.parse(order.push_subscription)
@@ -25,7 +26,8 @@ export async function sendReadyPush(order, shop) {
   });
 
   try {
-    await webpush.sendNotification(sub, payload, { TTL: 600, urgency: 'high' });
+    const r = await webpush.sendNotification(sub, payload, { TTL: 600, urgency: 'high' });
+    console.log(`[push] envoyé commande ${order.order_number} → ${new URL(sub.endpoint).host} (HTTP ${r.statusCode})`);
   } catch (err) {
     if (err.statusCode === 404 || err.statusCode === 410) {
       await pool.query('UPDATE orders SET push_subscription = NULL WHERE id = ?', [order.id]);

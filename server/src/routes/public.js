@@ -97,6 +97,7 @@ router.post(
       JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } }),
       o.id,
     ]);
+    console.log(`[push] abonnement enregistré (commande ${o.id}, ${new URL(sub.endpoint).host})`);
     res.json({ ok: true });
   }),
 );
