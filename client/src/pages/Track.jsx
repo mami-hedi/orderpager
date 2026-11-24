@@ -51,6 +51,7 @@ export default function Track() {
   const [notFound, setNotFound] = useState(false);
   const [number, setNumber] = useState(numberFromUrl);
   const [perm, setPerm] = useState(notifPermission);
+  const [pushErr, setPushErr] = useState('');
   const [order, setOrder] = useState(null); // { publicId, orderNumber, status, rev }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -114,7 +115,7 @@ export default function Track() {
   // Notifications déjà autorisées (ex. reprise d'une commande) : on (ré)enregistre l'abonnement
   useEffect(() => {
     const id = order?.publicId;
-    if (id && notifPermission() === 'granted') subscribeForOrder(id).catch(() => {});
+    if (id && notifPermission() === 'granted') doSubscribe(id);
   }, [order?.publicId]);
 
   // Resynchronise le statut (reconnexion, retour au premier plan, filet de sécurité)
@@ -204,9 +205,11 @@ export default function Track() {
       permission
         .then((p) => {
           setPerm(notifPermission());
-          return p === 'granted' ? subscribeForOrder(o.publicId) : null;
+          if (p === 'granted') return doSubscribe(o.publicId);
+          if (p === 'unsupported') setPushErr('navigateur non compatible');
+          return null;
         })
-        .catch(() => {});
+        .catch((err) => setPushErr(`${err?.name || 'erreur'}: ${err?.message || ''}`.slice(0, 120)));
     } catch (err) {
       setError(err.message === 'invalid_number' ? t('invalidNumber') : t('genericError'));
     } finally {
@@ -224,12 +227,22 @@ export default function Track() {
     setOrder((cur) => (cur ? { ...cur, status: 'picked' } : cur));
   }
 
+  // Abonnement push ; la raison d'un échec est affichée (sinon impossible à diagnostiquer sur le téléphone)
+  async function doSubscribe(id) {
+    try {
+      const ok = await subscribeForOrder(id);
+      setPushErr(ok ? '' : 'clé VAPID absente sur le serveur');
+    } catch (err) {
+      setPushErr(`${err?.name || 'erreur'}: ${err?.message || ''}`.slice(0, 120));
+    }
+  }
+
   // Geste utilisateur : demande l'autorisation des notifications (app installée sur iPhone)
   async function enableNotifications() {
     try {
       const p = await requestPermission();
       setPerm(notifPermission());
-      if (p === 'granted' && order?.publicId) await subscribeForOrder(order.publicId);
+      if (p === 'granted' && order?.publicId) await doSubscribe(order.publicId);
     } catch {
       setPerm(notifPermission());
     }
@@ -312,6 +325,8 @@ export default function Track() {
         {isIOS() && isStandalone() && perm === 'default' && (
           <button type="button" className="btn small" onClick={enableNotifications}>{t('notifEnable')}</button>
         )}
+        {pushErr && <p className="notif-status bad narrow">Notifications : {pushErr}</p>}
+        {!isIOS() && perm === 'denied' && <p className="notif-status bad narrow">{t('notifDenied')}</p>}
         {isIOS() && isStandalone() && perm === 'denied' && <p className="notif-status bad narrow">{t('notifDenied')}</p>}
         <button className="link" onClick={changeNumber}>{t('wrongNumber')}</button>
       </Shell>
