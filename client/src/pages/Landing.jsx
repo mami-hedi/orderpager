@@ -108,7 +108,7 @@ export default function Landing() {
           </div>
           <div className="mock" aria-hidden="true">
             <div className="phone">
-              <div className="screen">
+              <div className="lp-screen">
                 <small>Café de la Plage</small>
                 <div className="bell"><Bell size={46} color="#1e6b4f" sw={2} /></div>
                 <b>Votre commande est prête !</b>
@@ -240,11 +240,21 @@ export default function Landing() {
       )}
 
       <footer>
-        <div className="wrap">
-          <div><strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de MH Digital Solution</div>
-          <div>Hammamet, Tunisie</div>
-        </div>
-      </footer>
+  <div className="wrap">
+    <div>
+      <strong style={{ color: 'var(--ink)' }}>MH Bip</strong> · un service de{' '}
+      <a 
+        href="https://www.mh-digital-solution.com" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{ color: 'inherit', textDecoration: 'underline' }}
+      >
+        MH Digital Solution
+      </a>
+    </div>
+    <div>Tunisie</div>
+  </div>
+</footer>
     </div>
   );
 }
