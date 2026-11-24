@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './landing.css';
 
 // À renseigner avant la mise en ligne (laisser vide pour masquer le bouton).
 // WhatsApp : numéro international sans "+" ni espaces, ex. '21612345678'.
 const CONTACT = {
-  whatsapp: '',
+  whatsapp: '21658146177',
+  phoneLabel: '+216 58 146 177',
   email: '',
 };
 
@@ -13,6 +14,9 @@ const TRIAL_DAYS = 10;
 
 const Check = ({ color = '#1e6b4f', size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+);
+const WaIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.96L2 22l5.2-1.5A9.9 9.9 0 1 0 12.04 2Zm0 18.1c-1.5 0-2.9-.4-4.1-1.1l-.3-.2-3 .9.9-2.9-.2-.3a8.1 8.1 0 1 1 6.7 3.6Zm4.5-6c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.8-.4-1.6-.8-2.3-1.6-.6-.6-1-1.2-1.2-1.6-.1-.2 0-.4.1-.5l.4-.5c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.9 2.300 1 2.500c.1.2 1.700 2.600 4.200 3.700 1.500.6 2.100.7 2.800.6.5-.1 1.500-.6 1.700-1.200.2-.6.2-1.100.2-1.200-.1-.2-.2-.2-.4-.3Z" /></svg>
 );
 const Bell = ({ size = 22, color = '#fff', sw = 2.2 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
@@ -50,9 +54,14 @@ export default function Landing() {
     return () => { document.title = prev; };
   }, []);
 
-  const wa = CONTACT.whatsapp
-    ? `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent('Bonjour, je voudrais essayer MH Bip pour mon restaurant.')}`
-    : null;
+  const [menu, setMenu] = useState(false);
+  const waLink = (text) => `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`;
+  const TRY_MSG = 'Bonjour, je voudrais essayer MH Bip gratuitement pour mon restaurant.';
+  const ASK_MSG = 'Bonjour, j’ai une question sur MH Bip.';
+  const wa = CONTACT.whatsapp ? waLink(TRY_MSG) : '#contact';
+  const waAsk = CONTACT.whatsapp ? waLink(ASK_MSG) : '#contact';
+  const waProps = CONTACT.whatsapp ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+  const closeMenu = () => setMenu(false);
   const mail = CONTACT.email ? `mailto:${CONTACT.email}?subject=${encodeURIComponent('Essai MH Bip')}` : null;
 
   return (
@@ -60,12 +69,23 @@ export default function Landing() {
       <header>
         <div className="wrap">
           <a className="logo" href="#haut"><span><Bell /></span>MH Bip</a>
-          <nav aria-label="Navigation principale">
-            <a href="#comment">Comment ça marche</a>
-            <a href="#avantages">Avantages</a>
-            <a href="#tarif">Tarif</a>
-            <a href="#questions">Questions</a>
-            <a className="cta" href="#contact">Essai gratuit</a>
+          <button
+            type="button"
+            className="burger"
+            aria-label={menu ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={menu}
+            aria-controls="lp-nav"
+            onClick={() => setMenu((v) => !v)}
+          >
+            <span /><span /><span />
+          </button>
+          <nav id="lp-nav" className={menu ? 'open' : ''} aria-label="Navigation principale">
+            <a href="#comment" onClick={closeMenu}>Comment ça marche</a>
+            <a href="#avantages" onClick={closeMenu}>Avantages</a>
+            <a href="#tarif" onClick={closeMenu}>Tarif</a>
+            <a href="#questions" onClick={closeMenu}>Questions</a>
+            <a href="#contact" onClick={closeMenu}>Contact</a>
+            <a className="cta" href={wa} onClick={closeMenu} {...waProps}>Essai gratuit</a>
           </nav>
         </div>
       </header>
@@ -77,7 +97,7 @@ export default function Landing() {
             <h1>Fini les bippers. Le téléphone de vos clients sonne quand la commande est prête.</h1>
             <p>MH Bip remplace les bippers par un simple QR code. Votre client scanne, saisit son numéro de ticket, et son téléphone sonne dès que vous appuyez sur « Prête ». Rien à acheter, rien à installer.</p>
             <div className="row">
-              <a className="btn-lp" href="#contact">Essayer gratuitement</a>
+              <a className="btn-lp" href={wa} {...waProps}>Essayer gratuitement</a>
               <a className="btn-lp line" href="#comment">Voir comment ça marche</a>
             </div>
             <ul className="checks">
@@ -179,7 +199,7 @@ export default function Landing() {
                 <li><Check size={20} />Page client à l’adresse de votre restaurant</li>
                 <li><Check size={20} />Assistance directe</li>
               </ul>
-              <a className="btn-lp" href="#contact">Démarrer mon essai gratuit</a>
+              <a className="btn-lp" href={wa} {...waProps}>Démarrer mon essai gratuit</a>
             </div>
             <p style={{ maxWidth: 520, color: 'var(--soft)', fontSize: 15 }}>Le paiement se fait directement avec nous, sans carte bancaire en ligne.</p>
           </div>
@@ -202,15 +222,22 @@ export default function Landing() {
             <h2>Prêt à ranger vos bippers ?</h2>
             <p>Écrivez-nous le nom de votre restaurant : nous créons votre compte d’essai et vous le testez pendant {TRIAL_DAYS} jours.</p>
             <div className="row" style={{ justifyContent: 'center' }}>
-              {wa && <a className="btn-lp white" href={wa}>Nous écrire sur WhatsApp</a>}
-              {mail && <a className="btn-lp line-w" href={mail}>{CONTACT.email}</a>}
-              {!wa && !mail && import.meta.env.DEV && (
-                <span className="btn-lp white">[Renseignez CONTACT dans Landing.jsx]</span>
+              <a className="btn-lp white wa-btn" href={wa} {...waProps}><WaIcon />Essayer gratuitement sur WhatsApp</a>
+              <a className="btn-lp line-w" href={waAsk} {...waProps}>Nous contacter</a>
+              {CONTACT.phoneLabel && (
+                <a className="btn-lp line-w" href={`tel:+${CONTACT.whatsapp}`}>{CONTACT.phoneLabel}</a>
               )}
+              {mail && <a className="btn-lp line-w" href={mail}>{CONTACT.email}</a>}
             </div>
           </div>
         </section>
       </main>
+
+      {CONTACT.whatsapp && (
+        <a className="wa-float" href={waAsk} {...waProps} aria-label="Écrire sur WhatsApp">
+          <WaIcon size={30} />
+        </a>
+      )}
 
       <footer>
         <div className="wrap">
