@@ -25,6 +25,8 @@ function setUrlNumber(slug, n) {
   }
 }
 
+const pushSupported = () => typeof Notification !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
+
 const notifPermission = () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
 
 function Shell({ title, children, status }) {
@@ -237,6 +239,15 @@ export default function Track() {
     }
   }
 
+  // Bouton affiché dès l'ouverture de la page (avant la saisie du numéro)
+  async function askPermission() {
+    try {
+      await requestPermission();
+    } finally {
+      setPerm(notifPermission());
+    }
+  }
+
   // Geste utilisateur : demande l'autorisation des notifications (app installée sur iPhone)
   async function enableNotifications() {
     try {
@@ -336,7 +347,15 @@ export default function Track() {
   return (
     <Shell title={shop.name}>
       <h1>{t('enterNumber')}</h1>
-      {isIOS() && isStandalone() && perm === 'default' && <p className="muted narrow">{t('notifInstalledHint')}</p>}
+      {pushSupported() && perm === 'default' && (
+        <div className="install-card narrow">
+          <strong>🔔 {t('notifAskTitle')}</strong>
+          <p>{t('notifAskText')}</p>
+          <button type="button" className="btn small" onClick={askPermission}>{t('notifEnable')}</button>
+        </div>
+      )}
+      {perm === 'granted' && <p className="notif-status ok narrow">✓ {t('notifOn')}</p>}
+      {perm === 'denied' && <p className="notif-status bad narrow">{t(isIOS() ? 'notifDenied' : 'notifDeniedAndroid')}</p>}
       <form onSubmit={onSubmit} className="stack">
         <input
           className="input big"
