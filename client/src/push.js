@@ -19,7 +19,11 @@ export async function subscribeForOrder(publicId) {
   const { vapidPublicKey } = await api('/public/config');
   if (!vapidPublicKey) return false;
 
-  const reg = await navigator.serviceWorker.ready;
+  // `ready` ne se résout jamais si le service worker n'est pas enregistré : on limite l'attente pour afficher une erreur
+  const reg = await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('service worker non prêt (rechargez la page)')), 10000)),
+  ]);
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
     sub = await reg.pushManager.subscribe({
